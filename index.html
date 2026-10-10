@@ -1,0 +1,1807 @@
+<!doctype html>
+<html lang="en" class="dark scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, minimum-scale=1.0"
+    />
+    <title>VideoPlayer.js - Documentation</title>
+
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    />
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Inter", "sans-serif"],
+              mono: ["JetBrains Mono", "monospace"],
+            },
+            colors: {
+              brand: { 400: "#60a5fa", 500: "#3b82f6", 600: "#2563eb" },
+            },
+          },
+        },
+      };
+    </script>
+
+    <style>
+      body {
+        background-color: #030712;
+        color: #d1d5db;
+      }
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #111827;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #374151;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #4b5563;
+      }
+
+      .glass-panel {
+        background: rgba(17, 24, 39, 0.7);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(55, 65, 81, 0.4);
+      }
+
+      /* Documentation Prose Styling */
+      .prose h2 {
+        color: #fff;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-top: 2.5rem;
+        margin-bottom: 1rem;
+        border-bottom: 1px solid #1f2937;
+        padding-bottom: 0.5rem;
+        scroll-margin-top: 5rem;
+      }
+      .prose h3 {
+        color: #e5e7eb;
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-top: 1.5rem;
+        margin-bottom: 0.75rem;
+      }
+      .prose p {
+        margin-bottom: 1rem;
+        line-height: 1.7;
+      }
+      .prose ul {
+        list-style-type: disc;
+        padding-left: 1.5rem;
+        margin-bottom: 1rem;
+      }
+      .prose li {
+        margin-bottom: 0.5rem;
+        line-height: 1.6;
+      }
+      .prose code:not(pre code) {
+        background-color: #1f2937;
+        color: #60a5fa;
+        padding: 0.125rem 0.375rem;
+        border-radius: 0.25rem;
+        font-size: 0.875em;
+        font-family: "JetBrains Mono", monospace;
+      }
+      .prose pre {
+        background-color: #0d1117;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        overflow-x: auto;
+        border: 1px solid #1f2937;
+        margin-bottom: 1.5rem;
+      }
+      .prose pre code {
+        color: #e5e7eb;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 0.875em;
+        line-height: 1.5;
+      }
+
+      .toc-link.active {
+        color: #3b82f6;
+        font-weight: 600;
+        border-left-color: #3b82f6;
+      }
+
+      .toggle-checkbox:checked {
+        right: 0;
+        border-color: #3b82f6;
+      }
+      .toggle-checkbox:checked + .toggle-label {
+        background-color: #3b82f6;
+      }
+
+      .config-input {
+        width: 100%;
+        background: #111827;
+        border: 1px solid #374151;
+        border-radius: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+        color: #fff;
+        transition: all 0.2s;
+      }
+      .config-input:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 1px #3b82f6;
+      }
+
+      /* Custom File Input Styling */
+      input[type="file"]::file-selector-button {
+        margin-right: 12px;
+        padding: 6px 12px;
+        border: none;
+        border-radius: 4px;
+        background: rgba(59, 130, 246, 0.2);
+        color: #60a5fa;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      input[type="file"]::file-selector-button:hover {
+        background: rgba(59, 130, 246, 0.3);
+      }
+
+      .token-key {
+        color: #60a5fa;
+      }
+      .token-string {
+        color: #a7f3d0;
+      }
+      .token-boolean {
+        color: #f87171;
+      }
+      .token-punctuation {
+        color: #9ca3af;
+      }
+    </style>
+  </head>
+  <body
+    class="antialiased selection:bg-brand-500 selection:text-white flex flex-col min-h-screen"
+  >
+    <!-- Navigation -->
+    <nav class="sticky top-0 z-50 glass-panel border-b border-gray-800">
+      <div
+        class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16"
+      >
+        <div class="flex items-center gap-3">
+          <div
+            class="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-white shadow-lg shadow-brand-500/30"
+          >
+            <i class="fas fa-play text-sm"></i>
+          </div>
+          <span class="font-bold text-xl text-white tracking-tight"
+            >VideoPlayer<span class="text-brand-500">.js</span></span
+          >
+        </div>
+        <div class="flex items-center gap-6">
+          <a
+            href="#playground"
+            class="text-sm font-medium text-gray-400 hover:text-white transition"
+            >Playground</a
+          >
+          <a
+            href="#docs"
+            class="text-sm font-medium text-gray-400 hover:text-white transition"
+            >Docs</a
+          >
+          <a
+            href="https://github.com/JPROJECT-1"
+            target="_blank"
+            class="text-gray-400 hover:text-white transition"
+          >
+            <i class="fab fa-github text-xl"></i>
+          </a>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="pt-20 pb-16 px-4 text-center">
+      <div class="max-w-4xl mx-auto">
+        <div
+          class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-400 text-xs font-semibold uppercase tracking-wider mb-6"
+        >
+          <i class="fas fa-bolt"></i> Vanilla JavaScript
+        </div>
+        <h1
+          class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-6 tracking-tight leading-tight"
+        >
+          A responsive, customizable, <br class="hidden md:block" />
+          <span
+            class="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-cyan-400"
+            >YouTube-inspired</span
+          >
+          HTML5 Player.
+        </h1>
+        <p
+          class="text-lg md:text-xl text-gray-400 mb-8 max-w-3xl mx-auto leading-relaxed"
+        >
+          VideoPlayer adds a modern video-watching interface to your website
+          without requiring a frontend framework or a backend server.
+        </p>
+        <div class="flex flex-wrap justify-center gap-4">
+          <a
+            href="#docs"
+            class="px-6 py-3 rounded-lg bg-brand-600 hover:bg-brand-500 text-white font-medium transition shadow-lg shadow-brand-500/20 flex items-center gap-2"
+          >
+            <i class="fas fa-book"></i> Read Documentation
+          </a>
+          <a
+            href="#playground"
+            class="px-6 py-3 rounded-lg bg-gray-800 hover:bg-gray-700 text-white font-medium transition border border-gray-700 flex items-center gap-2"
+          >
+            <i class="fas fa-desktop"></i> Playground
+          </a>
+        </div>
+        <p class="text-xs text-gray-500 mt-6 max-w-2xl mx-auto">
+          VideoPlayer is an independent project inspired by familiar
+          video-player interfaces. It is not affiliated with, sponsored by, or
+          endorsed by YouTube or Google.
+        </p>
+      </div>
+    </header>
+
+    <main
+      class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full space-y-20 pb-24"
+    >
+      <!-- Interactive Playground Section -->
+      <section id="playground" class="scroll-mt-24">
+        <div class="flex items-center gap-3 mb-6">
+          <h2 class="text-2xl font-bold text-white">Interactive Playground</h2>
+          <div class="h-[1px] flex-grow bg-gray-800 ml-4"></div>
+        </div>
+
+        <div
+          class="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 items-start"
+        >
+          <!-- LEFT COLUMN: CONFIGURATION (UI Fixed) -->
+          <div
+            class="lg:col-span-4 glass-panel rounded-xl h-[800px] flex flex-col overflow-hidden relative shadow-lg shadow-black/50"
+          >
+            <div
+              class="flex items-center gap-2 bg-[#0b101a] px-5 py-4 border-b border-gray-800 shrink-0 z-10"
+            >
+              <i class="fas fa-sliders-h text-brand-500"></i>
+              <h3
+                class="text-sm font-semibold text-white uppercase tracking-wider"
+              >
+                Advanced Configuration
+              </h3>
+            </div>
+
+            <div class="p-4 md:p-5 overflow-y-auto custom-scrollbar flex-grow">
+              <form id="config-form" class="space-y-6">
+                <!-- Title & Dimensions -->
+                <div class="space-y-3">
+                  <div>
+                    <label class="block text-xs font-medium text-gray-400 mb-1"
+                      >Video Title</label
+                    >
+                    <input
+                      type="text"
+                      id="cfg-title"
+                      value=""
+                      placeholder="Type title video here..."
+                      class="config-input"
+                    />
+                  </div>
+                  <div class="grid grid-cols-2 gap-3">
+                    <div>
+                      <label
+                        class="block text-xs font-medium text-gray-400 mb-1"
+                        >Width</label
+                      >
+                      <input
+                        type="text"
+                        id="cfg-width"
+                        value="100%"
+                        placeholder="e.g. 100% or 800px"
+                        class="config-input"
+                      />
+                    </div>
+                    <div>
+                      <label
+                        class="block text-xs font-medium text-gray-400 mb-1"
+                        >Height</label
+                      >
+                      <input
+                        type="text"
+                        id="cfg-height"
+                        value="auto"
+                        placeholder="e.g. auto or 500px"
+                        class="config-input"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Progress Gradient Color -->
+                <div
+                  class="space-y-2 bg-gray-900/50 p-3 rounded-lg border border-gray-800"
+                >
+                  <label class="block text-xs font-medium text-gray-400"
+                    >Progress Color (Solid / Gradient)</label
+                  >
+                  <div class="flex items-center gap-3">
+                    <input
+                      type="color"
+                      id="cfg-color-solid"
+                      value="#3b82f6"
+                      title="Pick Solid Color"
+                      class="w-8 h-8 rounded cursor-pointer border-0 p-0 bg-transparent shrink-0"
+                    />
+                    <input
+                      type="text"
+                      id="cfg-color-text"
+                      value="#3b82f6"
+                      placeholder="e.g. linear-gradient(90deg, #f00, #00f) or #ff0000"
+                      class="config-input text-xs font-mono flex-grow"
+                    />
+                  </div>
+                  <p class="text-[10px] text-gray-500 mt-1 leading-tight">
+                    Gunakan color picker untuk warna solid, atau ketik manual
+                    untuk menggunakan efek <b>linear-gradient</b>.
+                  </p>
+                </div>
+
+                <hr class="border-gray-800" />
+
+                <!-- Image Uploads -->
+                <div class="space-y-3">
+                  <div>
+                    <label class="block text-xs font-medium text-gray-400 mb-1"
+                      >Cover/Poster Image</label
+                    >
+                    <input
+                      type="file"
+                      id="cfg-cover"
+                      accept="image/*"
+                      class="config-input px-1 py-1 text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-gray-400 mb-1"
+                      >Logo Image (Watermark)</label
+                    >
+                    <input
+                      type="file"
+                      id="cfg-logo"
+                      accept="image/*"
+                      class="config-input px-1 py-1 text-xs"
+                    />
+                  </div>
+                </div>
+
+                <hr class="border-gray-800" />
+
+                <!-- Dynamic Source Array -->
+                <div class="space-y-3">
+                  <div class="flex items-center justify-between">
+                    <label class="block text-sm font-semibold text-white"
+                      >Video Sources (src)
+                      <span class="text-red-500">*</span></label
+                    >
+                    <button
+                      type="button"
+                      id="btn-add-src"
+                      class="text-xs bg-brand-500/20 text-brand-400 hover:bg-brand-500/40 px-2 py-1 rounded transition"
+                    >
+                      <i class="fas fa-plus mr-1"></i>Add
+                    </button>
+                  </div>
+                  <div id="sources-container" class="space-y-2"></div>
+                </div>
+
+                <hr class="border-gray-800" />
+
+                <!-- Dynamic Subtitles Array -->
+                <div class="space-y-3">
+                  <div class="flex items-center justify-between">
+                    <label class="block text-sm font-semibold text-white"
+                      >Subtitles (LRC)</label
+                    >
+                    <button
+                      type="button"
+                      id="btn-add-subtitle"
+                      class="text-xs bg-brand-500/20 text-brand-400 hover:bg-brand-500/40 px-2 py-1 rounded transition"
+                    >
+                      <i class="fas fa-plus mr-1"></i>Add
+                    </button>
+                  </div>
+                  <div id="subtitles-container" class="space-y-3"></div>
+                  <div>
+                    <label
+                      class="block text-xs font-medium text-gray-400 mb-1 mt-2"
+                      >Default Active Subtitle</label
+                    >
+                    <select id="cfg-defaultSubtitle" class="config-input">
+                      <option value="">None</option>
+                    </select>
+                  </div>
+                </div>
+
+                <hr class="border-gray-800" />
+
+                <!-- General Toggles -->
+                <div class="space-y-4">
+                  <h4 class="text-xs font-semibold text-gray-500 uppercase">
+                    Player Behaviors
+                  </h4>
+                  <label
+                    class="flex items-center justify-between cursor-pointer group"
+                  >
+                    <span class="text-sm font-medium text-gray-300"
+                      >Autoplay</span
+                    >
+                    <div class="relative inline-block w-10 align-middle">
+                      <input
+                        type="checkbox"
+                        id="cfg-autoplay"
+                        class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 border-gray-600 appearance-none cursor-pointer transition-transform duration-200 z-10"
+                      />
+                      <label
+                        class="toggle-label block h-5 rounded-full bg-gray-600 cursor-pointer"
+                      ></label>
+                    </div>
+                  </label>
+                  <label
+                    class="flex items-center justify-between cursor-pointer group"
+                  >
+                    <span class="text-sm font-medium text-gray-300">Muted</span>
+                    <div class="relative inline-block w-10 align-middle">
+                      <input
+                        type="checkbox"
+                        id="cfg-muted"
+                        class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 border-gray-600 appearance-none cursor-pointer transition-transform duration-200 z-10"
+                      />
+                      <label
+                        class="toggle-label block h-5 rounded-full bg-gray-600 cursor-pointer"
+                      ></label>
+                    </div>
+                  </label>
+                  <label
+                    class="flex items-center justify-between cursor-pointer group"
+                  >
+                    <span class="text-sm font-medium text-gray-300">Loop</span>
+                    <div class="relative inline-block w-10 align-middle">
+                      <input
+                        type="checkbox"
+                        id="cfg-loop"
+                        class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 border-gray-600 appearance-none cursor-pointer transition-transform duration-200 z-10"
+                      />
+                      <label
+                        class="toggle-label block h-5 rounded-full bg-gray-600 cursor-pointer"
+                      ></label>
+                    </div>
+                  </label>
+                  <label
+                    class="flex items-center justify-between cursor-pointer group"
+                  >
+                    <span class="text-sm font-medium text-gray-300"
+                      >Controls</span
+                    >
+                    <div class="relative inline-block w-10 align-middle">
+                      <input
+                        type="checkbox"
+                        id="cfg-controls"
+                        checked
+                        class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 border-gray-600 appearance-none cursor-pointer transition-transform duration-200 z-10"
+                      />
+                      <label
+                        class="toggle-label block h-5 rounded-full bg-gray-600 cursor-pointer"
+                      ></label>
+                    </div>
+                  </label>
+                </div>
+
+                <hr class="border-gray-800" />
+
+                <!-- Menu Settings Toggles -->
+                <div class="space-y-4 pb-4">
+                  <h4 class="text-xs font-semibold text-brand-400 uppercase">
+                    Menu Settings (Gear Icon)
+                  </h4>
+                  <label
+                    class="flex items-center justify-between cursor-pointer group"
+                  >
+                    <span class="text-sm font-medium text-gray-300"
+                      >Quality Menu</span
+                    >
+                    <div class="relative inline-block w-10 align-middle">
+                      <input
+                        type="checkbox"
+                        id="cfg-set-quality"
+                        checked
+                        class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 border-gray-600 appearance-none cursor-pointer transition-transform duration-200 z-10"
+                      />
+                      <label
+                        class="toggle-label block h-5 rounded-full bg-gray-600 cursor-pointer"
+                      ></label>
+                    </div>
+                  </label>
+                  <label
+                    class="flex items-center justify-between cursor-pointer group"
+                  >
+                    <span class="text-sm font-medium text-gray-300"
+                      >Speed Menu</span
+                    >
+                    <div class="relative inline-block w-10 align-middle">
+                      <input
+                        type="checkbox"
+                        id="cfg-set-speed"
+                        checked
+                        class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 border-gray-600 appearance-none cursor-pointer transition-transform duration-200 z-10"
+                      />
+                      <label
+                        class="toggle-label block h-5 rounded-full bg-gray-600 cursor-pointer"
+                      ></label>
+                    </div>
+                  </label>
+                  <label
+                    class="flex items-center justify-between cursor-pointer group"
+                  >
+                    <span class="text-sm font-medium text-gray-300"
+                      >Loop Menu</span
+                    >
+                    <div class="relative inline-block w-10 align-middle">
+                      <input
+                        type="checkbox"
+                        id="cfg-set-loop"
+                        checked
+                        class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 border-gray-600 appearance-none cursor-pointer transition-transform duration-200 z-10"
+                      />
+                      <label
+                        class="toggle-label block h-5 rounded-full bg-gray-600 cursor-pointer"
+                      ></label>
+                    </div>
+                  </label>
+                  <label
+                    class="flex items-center justify-between cursor-pointer group"
+                  >
+                    <span class="text-sm font-medium text-gray-300"
+                      >Subtitle Menu</span
+                    >
+                    <div class="relative inline-block w-10 align-middle">
+                      <input
+                        type="checkbox"
+                        id="cfg-set-subtitle"
+                        checked
+                        class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 border-gray-600 appearance-none cursor-pointer transition-transform duration-200 z-10"
+                      />
+                      <label
+                        class="toggle-label block h-5 rounded-full bg-gray-600 cursor-pointer"
+                      ></label>
+                    </div>
+                  </label>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- RIGHT COLUMN: TABS -->
+          <div
+            class="lg:col-span-8 flex flex-col h-[800px] glass-panel rounded-xl border border-gray-800 overflow-hidden shadow-2xl"
+          >
+            <div class="flex border-b border-gray-800 bg-[#0b101a]">
+              <button
+                id="tab-btn-preview"
+                class="flex-1 py-3 text-sm font-semibold text-brand-400 border-b-2 border-brand-500 bg-gray-800/30 transition-all"
+              >
+                <i class="fas fa-desktop mr-2"></i>Live Preview
+              </button>
+              <button
+                id="tab-btn-code"
+                class="flex-1 py-3 text-sm font-semibold text-gray-500 border-b-2 border-transparent hover:text-gray-300 transition-all"
+              >
+                <i class="fas fa-code mr-2"></i>Generated Code
+              </button>
+            </div>
+
+            <!-- Live Preview Tab -->
+            <div
+              id="tab-preview"
+              class="flex-grow p-4 md:p-6 bg-[#050810] flex flex-col items-center justify-center relative overflow-hidden"
+            >
+              <div class="w-full max-w-4xl mx-auto shadow-2xl relative">
+                <div
+                  id="player-render-root"
+                  class="w-full bg-gray-900 rounded-xl overflow-hidden flex flex-col items-center justify-center aspect-video relative ring-1 ring-gray-800"
+                >
+                  <i class="fas fa-video-slash text-4xl text-gray-700 mb-3"></i>
+                  <p class="text-gray-500 text-sm font-medium text-center px-4">
+                    Upload setidaknya 1 sumber video pada konfigurasi
+                    <br />untuk melihat preview.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Code Tab -->
+            <div
+              id="tab-code"
+              class="flex-grow bg-[#0d1117] hidden flex-col relative overflow-hidden"
+            >
+              <div class="absolute top-3 right-4 z-20">
+                <button
+                  id="btn-copy"
+                  class="bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs px-3 py-1.5 rounded flex items-center gap-2 border border-gray-700 transition"
+                >
+                  <i class="far fa-copy"></i> Copy
+                </button>
+              </div>
+              <div class="flex-grow overflow-auto p-4 md:p-6 custom-scrollbar">
+                <pre
+                  class="m-0 text-[11px] md:text-[13px] font-mono leading-relaxed"
+                ><code id="code-output" class="language-javascript text-gray-300 block"></code></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Documentation Section -->
+      <section id="docs" class="scroll-mt-24">
+        <div class="flex items-center gap-3 mb-8">
+          <h2 class="text-2xl font-bold text-white">Documentation</h2>
+          <div class="h-[1px] flex-grow bg-gray-800 ml-4"></div>
+        </div>
+
+        <!-- Docs Grid Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          <!-- Sidebar TOC -->
+          <aside class="lg:col-span-3 sticky top-24 hidden lg:block">
+            <div class="glass-panel p-5 rounded-xl border border-gray-800">
+              <h4
+                class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4"
+              >
+                Table of Contents
+              </h4>
+              <ul class="space-y-1 border-l border-gray-800 text-sm">
+                <li>
+                  <a
+                    href="#features"
+                    class="toc-link block pl-4 py-1.5 text-gray-400 hover:text-white border-l-2 border-transparent transition"
+                    >Features</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="#how-it-works"
+                    class="toc-link block pl-4 py-1.5 text-gray-400 hover:text-white border-l-2 border-transparent transition"
+                    >How It Works</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="#requirements"
+                    class="toc-link block pl-4 py-1.5 text-gray-400 hover:text-white border-l-2 border-transparent transition"
+                    >Requirements</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="#quick-start"
+                    class="toc-link block pl-4 py-1.5 text-gray-400 hover:text-white border-l-2 border-transparent transition"
+                    >Quick Start</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="#configuration"
+                    class="toc-link block pl-4 py-1.5 text-gray-400 hover:text-white border-l-2 border-transparent transition"
+                    >Configuration</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="#subtitles"
+                    class="toc-link block pl-4 py-1.5 text-gray-400 hover:text-white border-l-2 border-transparent transition"
+                    >Subtitles</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="#customization-examples"
+                    class="toc-link block pl-4 py-1.5 text-gray-400 hover:text-white border-l-2 border-transparent transition"
+                    >Customization Examples</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="#compatibility"
+                    class="toc-link block pl-4 py-1.5 text-gray-400 hover:text-white border-l-2 border-transparent transition"
+                    >Browser Compatibility</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="#usage-guidelines"
+                    class="toc-link block pl-4 py-1.5 text-gray-400 hover:text-white border-l-2 border-transparent transition"
+                    >Usage Guidelines</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="#privacy"
+                    class="toc-link block pl-4 py-1.5 text-gray-400 hover:text-white border-l-2 border-transparent transition"
+                    >Privacy and Security</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="#license"
+                    class="toc-link block pl-4 py-1.5 text-gray-400 hover:text-white border-l-2 border-transparent transition"
+                    >License</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="#credits"
+                    class="toc-link block pl-4 py-1.5 text-gray-400 hover:text-white border-l-2 border-transparent transition"
+                    >Credits and Links</a
+                  >
+                </li>
+              </ul>
+            </div>
+          </aside>
+
+          <!-- Documentation Content -->
+          <div
+            class="lg:col-span-9 glass-panel p-6 md:p-10 rounded-xl border border-gray-800 prose prose-invert max-w-none"
+          >
+            <p class="text-xl text-gray-300 leading-relaxed">
+              VideoPlayer adds a modern video-watching interface to your website
+              without requiring a frontend framework or a backend server. It
+              supports direct video sources, quality selection, playback-speed
+              controls, a seekable timeline, hover previews, synchronized
+              LRC-style subtitles, fullscreen playback, and customizable
+              branding.
+            </p>
+
+            <h2 id="features">Features</h2>
+            <ul>
+              <li>
+                <strong>Responsive interface</strong> — adapts to different
+                container widths, including smaller screens.
+              </li>
+              <li>
+                <strong>HTML5 video playback</strong> — plays browser-supported
+                media files from direct URLs.
+              </li>
+              <li>
+                <strong>Video quality menu</strong> — lets viewers switch
+                between the source resolutions you provide.
+              </li>
+              <li>
+                <strong>Auto quality option</strong> — selects the last entry in
+                the configured <code>src</code> object. Put the highest-quality
+                source last.
+              </li>
+              <li>
+                <strong>Playback speed controls</strong> — offers 0.25x, 0.5x,
+                0.75x, Normal, 1.25x, 1.5x, and 2x speeds.
+              </li>
+              <li>
+                <strong>Interactive timeline</strong> — seek by clicking or
+                dragging the progress bar.
+              </li>
+              <li>
+                <strong>Timeline preview</strong> — displays a video-frame
+                preview while hovering over the timeline when the browser can
+                render the preview source.
+              </li>
+              <li>
+                <strong>LRC-style synchronized subtitles</strong> — display
+                timestamped subtitle lines and support multiple named subtitle
+                tracks.
+              </li>
+              <li>
+                <strong>Fullscreen mode</strong> — expands the player using the
+                browser Fullscreen API.
+              </li>
+              <li>
+                <strong>Volume controls</strong> — adjust volume and mute or
+                unmute playback.
+              </li>
+              <li>
+                <strong>Cover image</strong> — display a poster image before or
+                during playback, as supported by the browser.
+              </li>
+              <li>
+                <strong>Optional logo</strong> — show a small watermark or brand
+                logo in the player.
+              </li>
+              <li>
+                <strong>Loop, autoplay, and muted options</strong> — configure
+                the initial playback behavior.
+              </li>
+              <li>
+                <strong>Custom progress color</strong> — accepts CSS color
+                values, including hex, RGB, named colors, and gradients.
+              </li>
+              <li>
+                <strong>Configurable settings menu</strong> — show or hide
+                quality, speed, loop, and subtitle options.
+              </li>
+              <li>
+                <strong>Vanilla JavaScript</strong> — no React, Vue, or other
+                frontend framework is required.
+              </li>
+            </ul>
+
+            <h2 id="how-it-works">How It Works</h2>
+            <p>
+              VideoPlayer creates its own player interface inside a container
+              element on your page. You configure it with one or more direct
+              media URLs, then initialize it with JavaScript.
+            </p>
+            <p>
+              The player uses the browser's native HTML5
+              <code>&lt;video&gt;</code> element. It does not extract or play
+              video from a regular YouTube watch-page URL. If your content is
+              hosted by a video platform, use that platform's permitted embed
+              method instead. For VideoPlayer, supply direct video-file URLs
+              that the browser is allowed to access.
+            </p>
+            <p>
+              The Auto quality option is a simple source selection, not adaptive
+              bitrate streaming. It chooses the final source entry from
+              <code>src</code>; it does not automatically change quality in
+              response to network conditions.
+            </p>
+
+            <h2 id="requirements">Requirements</h2>
+            <ul>
+              <li>A modern browser with HTML5 video support.</li>
+              <li>
+                The VideoPlayer JavaScript source file, included in your
+                project.
+              </li>
+              <li>
+                Direct video-file URLs that are reachable by the viewer's
+                browser.
+              </li>
+              <li>
+                Font Awesome CSS for the interface icons. The player creates its
+                layout and styles, but the icon classes are provided by Font
+                Awesome.
+              </li>
+            </ul>
+            <p>
+              <em
+                >No Node.js installation, build step, database, or backend
+                server is required for basic use.</em
+              >
+            </p>
+
+            <h2 id="quick-start">Quick Start</h2>
+
+            <h3>1. Add a player container</h3>
+            <p>Add an empty element where the player should appear:</p>
+            <pre><code>&lt;div id="player-root"&gt;&lt;/div&gt;</code></pre>
+
+            <h3>2. Include Font Awesome and the player script</h3>
+            <p>
+              Add Font Awesome CSS so the player icons are visible. Then load
+              the VideoPlayer source file. In this example, the source file is
+              named <code>videoplayer.js</code>; replace that name with the
+              filename you actually use.
+            </p>
+            <pre><code>&lt;link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+/&gt;
+
+&lt;script src="./videoplayer.js"&gt;&lt;/script&gt;</code></pre>
+
+            <h3>3. Initialize the player</h3>
+            <p>
+              Place the initialization script after the player script and the
+              container element:
+            </p>
+            <pre><code>&lt;script&gt;
+  const player = new VideoPlayer({
+    container: "#player-root",
+    title: "My Demo Video",
+    src: {
+      "360p": "./media/video-360.mp4",
+      "720p": "./media/video-720.mp4",
+      "1080p": "./media/video-1080.mp4"
+    },
+    cover: "./media/poster.jpg",
+    logo: false,
+    width: "100%",
+    height: "auto",
+    autoplay: false,
+    muted: false,
+    loop: false,
+    controls: true,
+    progressColor: "#ff0000",
+    subtitle: false,
+    defaultSubtitle: false,
+    settings: {
+      quality: true,
+      speed: true,
+      loop: true,
+      subtitle: false
+    }
+  });
+&lt;/script&gt;</code></pre>
+            <p>
+              Replace the example media paths with your own hosted files. The
+              <code>src</code> object must contain at least one source;
+              otherwise, initialization throws an error. The example quality
+              labels are names shown in the menu, so use labels that match the
+              files you provide.
+            </p>
+
+            <h3>4. Open your page</h3>
+            <p>
+              Serve the page through your usual local development server or
+              hosting provider. Check that the media URLs work directly in the
+              browser and that the browser supports the files' formats and
+              codecs.
+            </p>
+
+            <h2 id="configuration">Configuration</h2>
+            <p>
+              Pass a configuration object to
+              <code>new VideoPlayer(config)</code>.
+            </p>
+
+            <div class="overflow-x-auto my-6 border border-gray-800 rounded-lg">
+              <table class="w-full text-left text-sm whitespace-nowrap">
+                <thead
+                  class="bg-gray-900/80 border-b border-gray-800 text-gray-300"
+                >
+                  <tr>
+                    <th class="px-4 py-3 font-semibold">Option</th>
+                    <th class="px-4 py-3 font-semibold">Type</th>
+                    <th class="px-4 py-3 font-semibold">Default</th>
+                    <th class="px-4 py-3 font-semibold w-full">Description</th>
+                  </tr>
+                </thead>
+                <tbody
+                  class="divide-y divide-gray-800 bg-[#0d1117]/50 text-gray-400"
+                >
+                  <tr class="hover:bg-gray-800/30">
+                    <td class="px-4 py-3 font-mono text-white">container</td>
+                    <td class="px-4 py-3 text-brand-400">string</td>
+                    <td class="px-4 py-3 font-mono">"#player-root"</td>
+                    <td class="px-4 py-3 whitespace-normal">
+                      CSS selector for the element that will contain the player.
+                      The element must already exist.
+                    </td>
+                  </tr>
+                  <tr class="hover:bg-gray-800/30">
+                    <td class="px-4 py-3 font-mono text-white">title</td>
+                    <td class="px-4 py-3 text-brand-400">string</td>
+                    <td class="px-4 py-3 font-mono">""</td>
+                    <td class="px-4 py-3 whitespace-normal">
+                      Video title displayed in the player's header.
+                    </td>
+                  </tr>
+                  <tr class="hover:bg-gray-800/30">
+                    <td class="px-4 py-3 font-mono text-white">src</td>
+                    <td class="px-4 py-3 text-brand-400">object</td>
+                    <td class="px-4 py-3 font-mono">{}</td>
+                    <td class="px-4 py-3 whitespace-normal">
+                      Required mapping of quality labels to direct video URLs.
+                      Must contain at least one entry.
+                    </td>
+                  </tr>
+                  <tr class="hover:bg-gray-800/30">
+                    <td class="px-4 py-3 font-mono text-white">cover</td>
+                    <td class="px-4 py-3 text-brand-400">string</td>
+                    <td class="px-4 py-3 font-mono">""</td>
+                    <td class="px-4 py-3 whitespace-normal">
+                      URL or path to the video's poster image.
+                    </td>
+                  </tr>
+                  <tr class="hover:bg-gray-800/30">
+                    <td class="px-4 py-3 font-mono text-white">logo</td>
+                    <td class="px-4 py-3 text-brand-400">string | false</td>
+                    <td class="px-4 py-3 font-mono text-orange-400">false</td>
+                    <td class="px-4 py-3 whitespace-normal">
+                      URL or path to an optional watermark logo, or false to
+                      omit it.
+                    </td>
+                  </tr>
+                  <tr class="hover:bg-gray-800/30">
+                    <td class="px-4 py-3 font-mono text-white">subtitle</td>
+                    <td class="px-4 py-3 text-brand-400">object | false</td>
+                    <td class="px-4 py-3 font-mono text-orange-400">false</td>
+                    <td class="px-4 py-3 whitespace-normal">
+                      Subtitle tracks, mapped by language/name to arrays of
+                      timestamped LRC-style lines.
+                    </td>
+                  </tr>
+                  <tr class="hover:bg-gray-800/30">
+                    <td class="px-4 py-3 font-mono text-white">
+                      defaultSubtitle
+                    </td>
+                    <td class="px-4 py-3 text-brand-400">string | false</td>
+                    <td class="px-4 py-3 font-mono text-orange-400">false</td>
+                    <td class="px-4 py-3 whitespace-normal">
+                      Key of the subtitle track to activate initially, or false
+                      to start with subtitles off.
+                    </td>
+                  </tr>
+                  <tr class="hover:bg-gray-800/30">
+                    <td class="px-4 py-3 font-mono text-white">width</td>
+                    <td class="px-4 py-3 text-brand-400">string</td>
+                    <td class="px-4 py-3 font-mono">"100%"</td>
+                    <td class="px-4 py-3 whitespace-normal">
+                      CSS width for the player wrapper, such as "100%" or
+                      "800px".
+                    </td>
+                  </tr>
+                  <tr class="hover:bg-gray-800/30">
+                    <td class="px-4 py-3 font-mono text-white">height</td>
+                    <td class="px-4 py-3 text-brand-400">string</td>
+                    <td class="px-4 py-3 font-mono">"auto"</td>
+                    <td class="px-4 py-3 whitespace-normal">
+                      CSS height for the player wrapper. The layout also uses a
+                      16:9 aspect ratio.
+                    </td>
+                  </tr>
+                  <tr class="hover:bg-gray-800/30">
+                    <td class="px-4 py-3 font-mono text-white">autoplay</td>
+                    <td class="px-4 py-3 text-brand-400">boolean</td>
+                    <td class="px-4 py-3 font-mono text-orange-400">false</td>
+                    <td class="px-4 py-3 whitespace-normal">
+                      Ask the browser to start playback automatically. Browser
+                      autoplay policies may prevent this.
+                    </td>
+                  </tr>
+                  <tr class="hover:bg-gray-800/30">
+                    <td class="px-4 py-3 font-mono text-white">muted</td>
+                    <td class="px-4 py-3 text-brand-400">boolean</td>
+                    <td class="px-4 py-3 font-mono text-orange-400">false</td>
+                    <td class="px-4 py-3 whitespace-normal">
+                      Start playback muted.
+                    </td>
+                  </tr>
+                  <tr class="hover:bg-gray-800/30">
+                    <td class="px-4 py-3 font-mono text-white">loop</td>
+                    <td class="px-4 py-3 text-brand-400">boolean</td>
+                    <td class="px-4 py-3 font-mono text-orange-400">false</td>
+                    <td class="px-4 py-3 whitespace-normal">
+                      Replay the video automatically when it reaches the end.
+                    </td>
+                  </tr>
+                  <tr class="hover:bg-gray-800/30">
+                    <td class="px-4 py-3 font-mono text-white">controls</td>
+                    <td class="px-4 py-3 text-brand-400">boolean</td>
+                    <td class="px-4 py-3 font-mono text-green-400">true</td>
+                    <td class="px-4 py-3 whitespace-normal">
+                      Show or hide the bottom control bar.
+                    </td>
+                  </tr>
+                  <tr class="hover:bg-gray-800/30">
+                    <td class="px-4 py-3 font-mono text-white">
+                      progressColor
+                    </td>
+                    <td class="px-4 py-3 text-brand-400">string</td>
+                    <td class="px-4 py-3 font-mono">"#ff0000"</td>
+                    <td class="px-4 py-3 whitespace-normal">
+                      CSS background value used for the timeline progress and
+                      its handle. Gradients are supported.
+                    </td>
+                  </tr>
+                  <tr class="hover:bg-gray-800/30">
+                    <td class="px-4 py-3 font-mono text-white">settings</td>
+                    <td class="px-4 py-3 text-brand-400">object</td>
+                    <td class="px-4 py-3 font-mono opacity-50">See below</td>
+                    <td class="px-4 py-3 whitespace-normal">
+                      Controls which options are available in the settings menu.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <p><strong>Default settings:</strong></p>
+            <pre><code>{
+  quality: true,
+  speed: true,
+  loop: true,
+  subtitle: false
+}</code></pre>
+            <p>
+              <code>settings.subtitle</code> can be an array of subtitle-track
+              names, for example <code>["English", "Indonesian"]</code>. Use the
+              same names as the keys in the subtitle object. Set it to
+              <code>false</code> when you do not want subtitle controls.
+            </p>
+            <p>
+              <strong>Important:</strong> <code>settings</code> is merged at the
+              top configuration level. If you provide your own settings object,
+              include every setting you want to keep; do not assume missing
+              nested settings will automatically inherit their defaults.
+            </p>
+
+            <h3>Video source ordering</h3>
+            <p>
+              The player uses the last key in <code>src</code> for the Auto
+              option. List sources from lowest to highest quality:
+            </p>
+            <pre><code>src: {
+  "360p": "/media/video-360.mp4",
+  "480p": "/media/video-480.mp4",
+  "720p": "/media/video-720.mp4",
+  "1080p": "/media/video-1080.mp4"
+}</code></pre>
+            <p>
+              In this example, Auto selects <code>1080p</code>. Make sure each
+              label points to a valid, compatible video URL.
+            </p>
+
+            <h2 id="subtitles">Subtitles</h2>
+            <p>
+              VideoPlayer supports timestamped subtitle lines using an LRC-style
+              format. Each line must contain a timestamp followed by the text to
+              display:
+            </p>
+            <pre><code>[00:01.00]Welcome to the video.
+[00:04.50]This is the next subtitle line.
+[00:08.25]Thanks for watching.</code></pre>
+            <p>
+              Configure subtitle tracks as an object whose values are arrays of
+              lines:
+            </p>
+            <pre><code>const player = new VideoPlayer({
+  container: "#player-root",
+  title: "A Video With Subtitles",
+  src: {
+    "720p": "./media/video-720.mp4"
+  },
+  subtitle: {
+    English: [
+      "[00:01.00]Welcome to the video.",
+      "[00:04.50]This is the next subtitle line."
+    ],
+    Indonesian: [
+      "[00:01.00]Selamat datang di video.",
+      "[00:04.50]Ini adalah baris subtitle berikutnya."
+    ]
+  },
+  defaultSubtitle: "English",
+  settings: {
+    quality: true,
+    speed: true,
+    loop: true,
+    subtitle: ["English", "Indonesian"]
+  }
+});</code></pre>
+            <p>
+              The timestamp format accepted by the parser is
+              <code>[mm:ss.xx]</code> or <code>[mm:ss.xxx]</code>, where the
+              numbers represent minutes, seconds, and hundredths or thousandths
+              of a second. Use two-digit minutes and seconds, and make sure each
+              timestamp matches the media. Lines without a valid timestamp are
+              ignored.
+            </p>
+
+            <h2 id="customization-examples">Customization Examples</h2>
+            <h3>Change the progress bar color</h3>
+            <p>A solid color:</p>
+            <pre><code>progressColor: "#7c3aed"</code></pre>
+            <p>An RGB color:</p>
+            <pre><code>progressColor: "rgb(0, 180, 120)"</code></pre>
+            <p>A CSS gradient:</p>
+            <pre><code>progressColor: "linear-gradient(90deg, #7c3aed, #06b6d4)"</code></pre>
+
+            <h3>Add a logo and poster</h3>
+            <pre><code>cover: "./assets/video-poster.webp",
+logo: "./assets/site-logo.svg"</code></pre>
+
+            <h3>Hide the control bar</h3>
+            <pre><code>controls: false</code></pre>
+            <p>
+              When controls are hidden, the video element remains in the player,
+              but the custom bottom control bar is not displayed. Make sure
+              viewers still have an appropriate way to control playback for your
+              use case.
+            </p>
+
+            <h3>Enable looping and start muted</h3>
+            <pre><code>autoplay: true,
+muted: true,
+loop: true</code></pre>
+            <p>
+              Autoplay is controlled by the browser and may be blocked. Starting
+              muted can improve compatibility with autoplay policies, but it
+              does not guarantee playback will start automatically.
+            </p>
+
+            <h2 id="compatibility">Browser Compatibility and Limitations</h2>
+            <ul>
+              <li>
+                Supported video formats and codecs depend on the viewer's
+                browser and operating system. MP4 with broadly supported codecs
+                is often a practical default, but test your own media.
+              </li>
+              <li>
+                The player needs direct, browser-accessible media URLs. A normal
+                YouTube watch-page URL is not a direct video file and cannot be
+                used as a <code>src</code> value here.
+              </li>
+              <li>
+                The Auto option selects the last configured source; it is not
+                network-aware adaptive streaming.
+              </li>
+              <li>
+                Autoplay and fullscreen requests are subject to browser
+                permissions and policies.
+              </li>
+              <li>
+                Timeline preview depends on whether the browser can load and
+                seek the preview media successfully.
+              </li>
+              <li>
+                For remote files, hosting and cross-origin configuration can
+                affect whether media loads or seeks correctly.
+              </li>
+              <li>
+                Font Awesome CSS is used for icons. If it is not loaded, the
+                controls may appear without their expected icons.
+              </li>
+              <li>
+                The supplied implementation injects its CSS once per page. If
+                you need several player instances with different CSS-level
+                options on the same page, test that setup carefully or adapt the
+                style-injection logic for per-instance styling.
+              </li>
+            </ul>
+
+            <h2 id="usage-guidelines">Usage Guidelines</h2>
+            <p>
+              VideoPlayer is intended for embedding video playback into
+              websites, portfolios, project pages, documentation, and other
+              lawful web experiences.
+            </p>
+            <ol>
+              <li>
+                <strong>Use media you have permission to publish.</strong> You
+                are responsible for obtaining the required rights for videos,
+                music, images, logos, subtitles, and other content you use.
+              </li>
+              <li>
+                <strong>Respect hosting-provider rules.</strong> Make sure your
+                media host allows the intended embedding, bandwidth usage, and
+                public access. Do not attempt to bypass access controls or
+                digital-rights restrictions.
+              </li>
+              <li>
+                <strong>Do not misrepresent the project.</strong> VideoPlayer is
+                inspired by common video-player patterns, including the familiar
+                experience offered by YouTube, but it is an independent
+                implementation. Do not imply that it is an official YouTube
+                product or that Google endorses it.
+              </li>
+              <li>
+                <strong>Preserve license notices when redistributing.</strong>
+                If you share or redistribute copies of the software, include the
+                original MIT copyright and permission notice.
+              </li>
+              <li>
+                <strong>Respect third-party licenses.</strong> Fonts, icon
+                libraries, media, and other third-party assets may have separate
+                license terms. Check and follow those terms independently.
+              </li>
+              <li>
+                <strong>Test your deployment.</strong> Verify media URLs, mobile
+                behavior, playback controls, subtitles, and source permissions
+                before publishing the player on a public website.
+              </li>
+            </ol>
+            <p>
+              <em
+                >These guidelines are practical recommendations, not additional
+                restrictions on the rights granted by the MIT License. The MIT
+                License terms below govern use of the software.</em
+              >
+            </p>
+
+            <h2 id="privacy">Privacy and Security</h2>
+            <p>
+              VideoPlayer is a client-side player and does not require its own
+              account system, database, or application backend. It requests
+              media and image resources from the URLs configured by the website
+              owner. The remote hosts you use may receive normal connection
+              information when a visitor's browser requests those resources.
+            </p>
+            <ul>
+              <li>Only configure media and asset URLs you trust.</li>
+              <li>
+                Do not place private or access-controlled media at publicly
+                accessible URLs unless you intend to make it public.
+              </li>
+              <li>Use HTTPS for your site and hosted media when available.</li>
+              <li>
+                Keep any third-party assets and scripts you add to the page up
+                to date.
+              </li>
+              <li>
+                If you accept title text, URLs, or other configuration from
+                untrusted users, validate and sanitize those values before
+                passing them into a player implementation that builds HTML
+                dynamically.
+              </li>
+            </ul>
+            <p>
+              The project does not by itself guarantee content availability,
+              copyright compliance, security of third-party hosts, or
+              compatibility with every browser.
+            </p>
+
+            <h2 id="license">License</h2>
+            <p>
+              This project is licensed under the MIT License. You may use, copy,
+              modify, merge, publish, distribute, sublicense, and sell copies of
+              the software, subject to the license conditions. The copyright and
+              permission notice must be included in copies or substantial
+              portions of the software.
+            </p>
+            <pre><code>Copyright (c) 2026 JPROJECT-1
+MIT License
+
+Copyright (c) 2026 JPROJECT-1
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.</code></pre>
+
+            <h2 id="credits">Credits and Links</h2>
+            <ul>
+              <li><strong>Developer:</strong> JPROJECT-1</li>
+              <li>
+                <strong>Personal website:</strong>
+                <a
+                  href="https://jasonpw.web.id"
+                  target="_blank"
+                  class="text-brand-400 hover:underline"
+                  >jasonpw.web.id</a
+                >
+              </li>
+              <li>
+                <strong>Studio:</strong>
+                <a
+                  href="https://ycylstudio.web.id"
+                  target="_blank"
+                  class="text-brand-400 hover:underline"
+                  >YCYL STUDIO</a
+                >
+              </li>
+              <li>
+                <strong>Live demo:</strong>
+                <a
+                  href="https://jproject-1.github.io/videoplayer/"
+                  target="_blank"
+                  class="text-brand-400 hover:underline"
+                  >VideoPlayer</a
+                >
+              </li>
+            </ul>
+            <p>
+              If you use VideoPlayer in your project, feedback, bug reports, and
+              improvements are welcome through the project's available
+              communication channels.
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-900 bg-[#070a12] mt-auto">
+      <div
+        class="max-w-7xl mx-auto px-4 py-10 flex flex-col items-center justify-center gap-4"
+      >
+        <div class="flex items-center gap-2 opacity-50">
+          <i class="fas fa-play text-[10px]"></i>
+          <span class="font-bold text-sm tracking-widest uppercase"
+            >VideoPlayer.js</span
+          >
+        </div>
+        <p class="text-xs text-gray-500 text-center max-w-md">
+          A robust, responsive, and customizable Vanilla JS Video Player API.
+          <br />
+          Independent project by JPROJECT-1.
+        </p>
+        <p class="text-[11px] text-gray-600 mt-2">
+          &copy; <span id="year"></span> JPROJECT-1. All rights reserved. MIT
+          License.
+        </p>
+      </div>
+    </footer>
+
+    <!-- Interactive Navigation Script -->
+    <script>
+      document.getElementById("year").textContent = new Date().getFullYear();
+
+      // Highlight TOC links on scroll
+      const sections = document.querySelectorAll(".prose h2");
+      const navLinks = document.querySelectorAll(".toc-link");
+
+      window.addEventListener("scroll", () => {
+        let current = "";
+        sections.forEach((section) => {
+          const sectionTop = section.offsetTop;
+          const sectionHeight = section.clientHeight;
+          if (scrollY >= sectionTop + 1250) {
+            current = section.getAttribute("id");
+          }
+        });
+
+        navLinks.forEach((link) => {
+          link.classList.remove("active");
+          if (link.getAttribute("href").includes(current) && current !== "") {
+            link.classList.add("active");
+          }
+        });
+      });
+
+      // 2. Playground Logic
+      let objectUrls = [];
+      function clearObjectUrls() {
+        objectUrls.forEach((url) => URL.revokeObjectURL(url));
+        objectUrls = [];
+      }
+
+      // Tabs Switching
+      const tabs = {
+        preview: document.getElementById("tab-preview"),
+        code: document.getElementById("tab-code"),
+      };
+      const btns = {
+        preview: document.getElementById("tab-btn-preview"),
+        code: document.getElementById("tab-btn-code"),
+      };
+
+      function switchTab(t) {
+        Object.values(tabs).forEach((el) => {
+          el.classList.remove("flex");
+          el.classList.add("hidden");
+        });
+        Object.values(btns).forEach((el) => {
+          el.classList.remove(
+            "text-brand-400",
+            "border-brand-500",
+            "bg-gray-800/30",
+          );
+          el.classList.add("text-gray-500", "border-transparent");
+        });
+
+        tabs[t].classList.remove("hidden");
+        tabs[t].classList.add("flex");
+        btns[t].classList.add(
+          "text-brand-400",
+          "border-brand-500",
+          "bg-gray-800/30",
+        );
+        btns[t].classList.remove("text-gray-500", "border-transparent");
+      }
+      btns.preview.onclick = () => switchTab("preview");
+      btns.code.onclick = () => switchTab("code");
+
+      // Color Inputs Synchronization
+      const colorSolid = document.getElementById("cfg-color-solid");
+      const colorText = document.getElementById("cfg-color-text");
+
+      colorSolid.addEventListener("input", (e) => {
+        colorText.value = e.target.value;
+        renderData();
+      });
+
+      colorText.addEventListener("input", (e) => {
+        const val = e.target.value.trim();
+        if (/^#[0-9A-F]{6}$/i.test(val)) {
+          colorSolid.value = val;
+        }
+        renderData();
+      });
+
+      // Dynamic Subtitles
+      const subtitleContainer = document.getElementById("subtitles-container");
+      const btnAddSub = document.getElementById("btn-add-subtitle");
+      const defaultSubSelect = document.getElementById("cfg-defaultSubtitle");
+
+      function updateDefaultSubSelect() {
+        const inputs = document.querySelectorAll(".sub-lang-input");
+        const currentVal = defaultSubSelect.value;
+        defaultSubSelect.innerHTML = '<option value="">None</option>';
+        inputs.forEach((inp) => {
+          if (inp.value.trim() !== "") {
+            const opt = document.createElement("option");
+            opt.value = inp.value.trim();
+            opt.textContent = inp.value.trim();
+            defaultSubSelect.appendChild(opt);
+          }
+        });
+        if (
+          Array.from(defaultSubSelect.options).some(
+            (o) => o.value === currentVal,
+          )
+        ) {
+          defaultSubSelect.value = currentVal;
+        }
+      }
+
+      btnAddSub.addEventListener("click", () => {
+        const div = document.createElement("div");
+        div.className =
+          "bg-gray-900/50 p-3 rounded-lg border border-gray-800 relative space-y-2";
+        div.innerHTML = `
+                <button type="button" class="absolute top-2 right-2 text-gray-500 hover:text-red-400" onclick="this.parentElement.remove(); renderData(); updateDefaultSubSelect();"><i class="fas fa-times"></i></button>
+                <input type="text" placeholder="Language (e.g. Indonesia)" class="config-input sub-lang-input w-3/4 text-xs font-semibold">
+                <textarea rows="3" placeholder="[00:00.00] welcome to this video.\\n[00:03.00] The UI is now much cleaner..." class="config-input sub-text-input text-xs font-mono leading-relaxed" style="resize:vertical;"></textarea>
+            `;
+        div.querySelectorAll("input, textarea").forEach((el) =>
+          el.addEventListener("input", () => {
+            renderData();
+            updateDefaultSubSelect();
+          }),
+        );
+        subtitleContainer.appendChild(div);
+      });
+
+      // Dynamic Sources
+      const srcContainer = document.getElementById("sources-container");
+      const btnAddSrc = document.getElementById("btn-add-src");
+
+      btnAddSrc.addEventListener("click", () => {
+        const div = document.createElement("div");
+        div.className =
+          "bg-gray-900/50 p-3 rounded-lg border border-gray-800 relative space-y-2";
+        div.innerHTML = `
+                <button type="button" class="absolute top-2 right-2 text-gray-500 hover:text-red-400" onclick="this.parentElement.remove(); renderData();"><i class="fas fa-times"></i></button>
+                <input type="text" placeholder="Resolution (e.g. 1080p)" class="config-input src-key-input w-2/3 text-xs font-semibold">
+                <input type="file" accept="video/*" class="config-input src-file-input px-1 py-1 text-xs">
+            `;
+        div
+          .querySelectorAll("input")
+          .forEach((el) => el.addEventListener("input", renderData));
+        srcContainer.appendChild(div);
+      });
+
+      // Trigger on form change
+      document
+        .querySelectorAll(
+          '#config-form input:not(.src-file-input):not(.src-key-input):not(.sub-lang-input):not(.sub-text-input):not([type="color"]), #config-form select',
+        )
+        .forEach((el) => {
+          el.addEventListener(
+            el.type === "checkbox" ||
+              el.tagName === "SELECT" ||
+              el.type === "file"
+              ? "change"
+              : "input",
+            () => {
+              renderData();
+            },
+          );
+        });
+
+      function syntaxHighlight(code) {
+        return code
+          .replace(/"(.*?)"(?=:)/g, '<span class="token-key">"$1"</span>')
+          .replace(/:\s"(.*?)"/g, ': <span class="token-string">"$1"</span>')
+          .replace(
+            /:\s(true|false)/g,
+            ': <span class="token-boolean">$1</span>',
+          )
+          .replace(
+            /([\{\}\[\]])/g,
+            '<span class="token-punctuation">$1</span>',
+          );
+      }
+
+      function renderData() {
+        clearObjectUrls();
+
+        const title = document.getElementById("cfg-title").value;
+        const width = document.getElementById("cfg-width").value || "100%";
+        const height = document.getElementById("cfg-height").value || "auto";
+        const colorTextVal = document.getElementById("cfg-color-text").value;
+
+        const coverInput = document.getElementById("cfg-cover");
+        const logoInput = document.getElementById("cfg-logo");
+        let coverUrl = "",
+          coverName = "";
+        let logoUrl = "",
+          logoName = "";
+
+        if (coverInput.files[0]) {
+          coverUrl = URL.createObjectURL(coverInput.files[0]);
+          coverName = coverInput.files[0].name;
+          objectUrls.push(coverUrl);
+        }
+        if (logoInput.files[0]) {
+          logoUrl = URL.createObjectURL(logoInput.files[0]);
+          logoName = logoInput.files[0].name;
+          objectUrls.push(logoUrl);
+        }
+
+        const autoplay = document.getElementById("cfg-autoplay").checked;
+        const muted = document.getElementById("cfg-muted").checked;
+        const loop = document.getElementById("cfg-loop").checked;
+        const controls = document.getElementById("cfg-controls").checked;
+
+        const setQuality = document.getElementById("cfg-set-quality").checked;
+        const setSpeed = document.getElementById("cfg-set-speed").checked;
+        const setLoop = document.getElementById("cfg-set-loop").checked;
+        const setSubtitleToggle =
+          document.getElementById("cfg-set-subtitle").checked;
+
+        const srcObjLive = {};
+        const srcObjCode = {};
+        let hasVideo = false;
+        document.querySelectorAll("#sources-container > div").forEach((div) => {
+          const key = div.querySelector(".src-key-input").value.trim();
+          const fileInput = div.querySelector(".src-file-input");
+          if (key && fileInput.files[0]) {
+            hasVideo = true;
+            const vUrl = URL.createObjectURL(fileInput.files[0]);
+            objectUrls.push(vUrl);
+            srcObjLive[key] = vUrl;
+            srcObjCode[key] = `source/${fileInput.files[0].name}`;
+          }
+        });
+
+        const subObjLive = {};
+        let subCodeString = "";
+        const subLangs = [];
+        document
+          .querySelectorAll("#subtitles-container > div")
+          .forEach((div) => {
+            const lang = div.querySelector(".sub-lang-input").value.trim();
+            const text = div.querySelector(".sub-text-input").value.trim();
+            if (lang && text) {
+              subLangs.push(lang);
+              const lines = text.split("\\n").filter((l) => l.trim() !== "");
+              subObjLive[lang] = lines;
+              subCodeString += `    ${lang}: [\n`;
+              lines.forEach(
+                (l) =>
+                  (subCodeString += `      "${l.replace(/"/g, '\\"')}",\n`),
+              );
+              subCodeString += `    ],\n`;
+            }
+          });
+
+        const defaultSub = document.getElementById("cfg-defaultSubtitle").value;
+
+        // Generate Code String
+        let srcCodeBody = "";
+        for (let k in srcObjCode)
+          srcCodeBody += `    "${k}": "${srcObjCode[k]}",\n`;
+
+        const settingsSubArray =
+          subLangs.length > 0 ? `["${subLangs.join('", "')}"]` : "[]";
+        const finalSettingsSubtitle = setSubtitleToggle
+          ? settingsSubArray
+          : "false";
+
+        const generatedCode = `const player = new VideoPlayer({
+  container: "#player-root",
+${title ? `  title: "${title}",\n` : ""}
+  src: {
+${srcCodeBody || "    // Upload video source to generate keys"}  },
+
+${coverName ? `  cover: "assets/${coverName}",\n` : ""}${logoName ? `  logo: "assets/${logoName}",\n` : ""}
+  width: "${width}",
+  height: "${height}",
+  autoplay: ${autoplay},
+  muted: ${muted},
+  loop: ${loop},
+  controls: ${controls},
+${colorTextVal ? `  progressColor: "${colorTextVal}",\n` : ""}${defaultSub ? `  defaultSubtitle: "${defaultSub}",\n` : ""}
+${Object.keys(subObjLive).length > 0 ? `  subtitle: {\n${subCodeString}  },\n` : ""}
+  settings: {
+    quality: ${setQuality},
+    speed: ${setSpeed},
+    loop: ${setLoop},
+    subtitle: ${finalSettingsSubtitle},
+  },
+});`;
+
+        document.getElementById("code-output").innerHTML =
+          syntaxHighlight(generatedCode);
+
+        // Preview Build
+        const root = document.getElementById("player-render-root");
+        if (!hasVideo) {
+          root.innerHTML = `<i class="fas fa-video-slash text-4xl text-gray-700 mb-3"></i>
+                                  <p class="text-gray-500 text-sm font-medium text-center px-4">Upload setidaknya 1 sumber video pada konfigurasi <br>beserta nama resolusinya untuk melihat preview.</p>`;
+          return;
+        }
+
+        root.innerHTML = "";
+        try {
+          if (typeof VideoPlayer !== "undefined") {
+            new VideoPlayer({
+              container: "#player-render-root",
+              title: title || "",
+              src: srcObjLive,
+              cover: coverUrl || "",
+              logo: logoUrl || false,
+              width: width,
+              height: height,
+              autoplay: autoplay,
+              muted: muted,
+              loop: loop,
+              controls: controls,
+              progressColor: colorTextVal || "#3b82f6",
+              subtitle: Object.keys(subObjLive).length > 0 ? subObjLive : false,
+              defaultSubtitle: defaultSub || false,
+              settings: {
+                quality: setQuality,
+                speed: setSpeed,
+                loop: setLoop,
+                subtitle: setSubtitleToggle ? subLangs : false,
+              },
+            });
+          }
+        } catch (err) {
+          root.innerHTML = `<div class="p-4 text-center text-red-400 text-sm w-full"><i class="fas fa-bug block text-2xl mb-2"></i>Error: ${err.message}</div>`;
+        }
+      }
+
+      document
+        .getElementById("btn-copy")
+        .addEventListener("click", function () {
+          navigator.clipboard
+            .writeText(document.getElementById("code-output").innerText)
+            .then(() => {
+              const og = this.innerHTML;
+              this.innerHTML =
+                '<i class="fas fa-check text-green-400"></i> Copied';
+              setTimeout(() => (this.innerHTML = og), 2000);
+            });
+        });
+
+      window.addEventListener("DOMContentLoaded", renderData);
+    </script>
+  </body>
+</html>
